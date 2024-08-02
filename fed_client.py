@@ -5,7 +5,10 @@ import requests
 
 # Config parameters
 epochs_client = 50  # 每個客戶端的訓練輪次
-dataset_path = 'client1_dataset'  # Client dataset path
+datasets = [
+    "/mnt/c/Users/Kevin/FedAvg/dataset/client1",
+    "/mnt/c/Users/Kevin/FedAvg/dataset/client2",
+]
 model_path = 'yolov8n-cls.pt'  # Model path
 
 
@@ -29,7 +32,8 @@ def train_on_client(model, dataset_path, epochs):
 
 ## Train the model
 
-local_weights = train_on_client(model, dataset_path, epochs_client)
+for path in datasets:
+    local_weights = train_on_client(model, path, epochs_client)
 
 ## Upload the weight to the server
 
