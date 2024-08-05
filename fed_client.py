@@ -1,4 +1,5 @@
 from ultralytics import YOLO
+from evaluate import evaluate_model
 import os
 import torch
 import requests 
@@ -28,18 +29,36 @@ def train_on_client(model, dataset_path, epochs):
     model.train(data=dataset_path, epochs=epochs, save=False)
     return model.state_dict()  # Return the model weight after training
 
+# def evaluate_model(model, dataset_path):
+#     results0 = model(get_files_in_path(dataset_path + '/0/'))
+#     results1 = model(get_files_in_path(dataset_path + '/1/'))
+#     cnt = 0
+#     tot = len(results0)
+#     for result in results0 : 
+#         cnt += (result.probs.data[0].item() > 0.5)
+#     tot += len(results1)
+#     for result in results1 : 
+#         cnt += (result.probs.data[1].item() > 0.5)
+#     return {"accuracy": cnt / tot}  # Example metric
 
 
 ## Train the model
 
+# for path in datasets:
+#     local_weights = train_on_client(model, path, epochs_client)
+
+# ## Upload the weight to the server
+
+# weights_path = 'local_weights.pth'
+# torch.save(local_weights, weights_path)  ## ???
+
 for path in datasets:
     local_weights = train_on_client(model, path, epochs_client)
+    evaluation_result = evaluate_model(model, path + '/train')
+    print(f"Evaluation result for {path}: {evaluation_result}")
 
-## Upload the weight to the server
-
-weights_path = 'local_weights.pth'
-torch.save(local_weights, weights_path)  ## ???
-
+    weights_path = 'local_weights.pth'
+    torch.save(local_weights, weights_path)
 
 ## Send requests to the server
 with open(weights_path, 'rb') as f:

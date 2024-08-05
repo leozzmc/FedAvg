@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify, send_file
 import torch
 from ultralytics import YOLO
 from collections import OrderedDict
+from evaluate import *
+
 
 
 app = Flask(__name__)
@@ -10,7 +12,10 @@ app = Flask(__name__)
 n = 2  # number of clients
 epochs_global = 1  # global epoch
 model_path = 'yolov8n-cls.pt'  # model path
-global_model = YOLO(model_path)  # init global model
+# 服務器
+global_model = YOLO(model_path)
+
+
 
 
 def average_weights(weights_list):
@@ -21,6 +26,7 @@ def average_weights(weights_list):
         stacked_weights = torch.stack([weights[key].float() for weights in weights_list])
         average_weights[key] = torch.mean(stacked_weights, dim=0)
     return average_weights
+
 
 @app.route('/upload_weights', methods=['POST'])
 def upload_weights():
@@ -34,7 +40,15 @@ def upload_weights():
     # If it is the last epoch, perform global aggregation
     if len(client_weights) == n:
         global_weights = average_weights(client_weights)
+
+        # 調整全局模型的最後一層
+        adjust_model_for_classes(global_model, 2)  # 2 為你的類別數量
+
         global_model.load_state_dict(global_weights)
+
+        evaluation_result = evaluate_model(global_model, '/mnt/c/Users/Kevin/FedAvg/dataset/val')
+        print(f"Global model evaluation: {evaluation_result}")
+
         return jsonify({"status": "weights aggregated and global model updated"})
     
     return jsonify({"status": "weights received"})

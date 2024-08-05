@@ -11,14 +11,20 @@ imgsz = 640  # Image size for training
 root = os.getcwd()  # Set root to the current working directory
 print(root)
 datasets = [
-    os.path.join(root, 'client1_dataset'),  # Adjust these paths as needed
-    os.path.join(root, 'client2_dataset'),
-    os.path.join(root, 'validation_dataset')
+    "/mnt/c/Users/Kevin/FedAvg/dataset/client1",
+    "/mnt/c/Users/Kevin/FedAvg/dataset/client2",
+    "/mnt/c/Users/Kevin/FedAvg/dataset/val",
 ]
 
 # Initialize models (Replace 'yolov8n-cls.pt' with the path to the desired model)
 model_paths = ['yolov8n-cls.pt' for _ in range(n)]  # Replace with your model paths
 models = [YOLO(model_path) for model_path in model_paths]
+
+for path in datasets:
+    if not os.path.exists(path):
+        print(f"Dataset path does not exist: {path}")
+    else:
+        print(f"Dataset path exists: {path}")
 
 def get_files_in_path(directory_path):
     """Retrieve all file paths in a given directory."""
