@@ -11,4 +11,4 @@ Running FedAverage algorithm on a single server for federation learning
 
 ## Client
 
-- `python3 fed_client.py`
+- `python3 client.py`
