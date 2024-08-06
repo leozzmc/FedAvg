@@ -37,7 +37,7 @@ def train_on_client(model, dataset_path, epochs, client_id):
     local_weights = model.state_dict()  # Get the trained model weights
     # Save weights to file
     weights_file = weights_file_template.format(client_id=client_id)
-    torch.save(local_weights, weights_file)
+    torch.save(local_weights, + weights_file)
     return weights_file
 
 def upload_weights(client_id, weights_file):
