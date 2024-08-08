@@ -31,6 +31,7 @@ def upload_weights(client_id):
 
     # Check if all clients have uploaded their weights
     uploaded_files = [f for f in os.listdir(weights_dir) if f.startswith('client_') and f.endswith('_weights.pth')]
+    
     if len(uploaded_files) == n:
         weights_list = []
         for uploaded_file in uploaded_files:
