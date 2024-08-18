@@ -20,8 +20,9 @@ Running FedAverage algorithm on a single server for federation learning
 Files:
 
 
-📄 `image_processor.py`: is for generating bounding boxes for existing orchid images under `/orchid_image`, the output images will under `/output` folder
-📄 `csv2YOLO.py`:  Covert existing orchid feature csv into a single annoation file under `/annotations` folder
+- 📄 `image_processor.py`: is for generating bounding boxes for existing orchid images under `/orchid_image`, the output images will under `/output` folder
+
+- 📄 `csv2YOLO.py`:  Covert existing orchid feature csv into a single annoation file under `/annotations` folder
 
 
 
