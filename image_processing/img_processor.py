@@ -13,9 +13,8 @@ def extract_roi(arr, x, y, w, h, intensity, line):
 
     return (roi, bounding_box)
 
-
 # 確保 output 資料夾存在
-output_dir = 'output'
+output_dir = 'train'
 roi_output_dir = os.path.join(output_dir, 'roi')
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
@@ -33,6 +32,27 @@ for filename in filenames:
 
     image_path = os.path.join(Pth, filename)
 
+    # 檢查圖像副檔名
+    file_extension = os.path.splitext(filename)[1].lower()
+
+    if file_extension != '.jpg':
+        # 將非 .jpg 圖片讀取並保存為 .jpg
+        image = cv2.imread(image_path)
+        if image is not None:
+            # 將圖像保存為 .jpg
+            new_filename = os.path.splitext(filename)[0] + '.jpg'
+            new_image_path = os.path.join(Pth, new_filename)
+            cv2.imwrite(new_image_path, image)
+            print(f"Converted and saved {filename} to {new_filename}")
+            
+            # 刪除原始的非 .jpg 圖片檔案
+            os.remove(image_path)
+            print(f"Deleted original file: {filename}")
+
+            # 使用 .jpg 文件名繼續後續處理
+            filename = new_filename
+            image_path = new_image_path
+
     # 使用 OpenCV 讀取圖像
     image = cv2.imread(image_path)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -44,8 +64,8 @@ for filename in filenames:
     pos = df[df['filename'] == filename_without_extension]
 
     if not pos.empty:
-    # get the corresponding label name
-        label =  pos['label'].values[0]
+        # 取得對應的標籤名稱
+        label = pos['label'].values[0]
         pos = pos[['left_x', 'top_y', 'width', 'height']].values.flatten().tolist()
         ori_x = pos[0]
         ori_y = pos[1]
@@ -64,11 +84,13 @@ for filename in filenames:
         plt.imshow(bounding_boxed)
         plt.axis('off')
         plt.savefig(output_path)
-        plt.close()  
-
+        plt.close()
 
         # 保存 ROI 圖片
         roi_path = os.path.join(roi_output_dir, f'roi_{label}.png')
         plt.imsave(roi_path, roi)
     else:
         print(f"No matching data found for {filename_without_extension}")
+        # 刪除沒有匹配數據的圖像
+        os.remove(image_path)
+        print(f"Deleted image with no matching data: {filename}")
