@@ -25,8 +25,3 @@ Files:
 - 📄 `csv2YOLO.py`:  Covert existing orchid feature csv into a single annoation file under `/labels` folder
 
 
-
-
-```
-cd image_processing/
-```
