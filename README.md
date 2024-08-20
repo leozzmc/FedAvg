@@ -25,3 +25,12 @@ Files:
 - 📄 `csv2YOLO.py`:  Covert existing orchid feature csv into a single annoation file under `/labels` folder
 
 
+## Datasets
+
+- `image_processing/Orchid_label.v2i.yolo.8`
+
+Training command:
+```
+yolo train data=data.yaml model=yolov8n.pt epochs=50 batch=16
+```
+
