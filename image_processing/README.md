@@ -39,5 +39,7 @@ yolo detect predict model=runs/detect/train2/weights/best.pt source=valid/images
 ## 下一步
 
 - `client1/`: 模擬大公司，佔有 70% 的原始 datasets
-
+  - 已經建立好模型跟進行預測
+  - 有寫一個  `count_number.py` 可以去load train 好的模型然後去計算葉子數量，其實就是去看有幾個label為 `leaf` bounding box 就算是這個模型辨識出了幾個葉子
 - `client2/`: 模擬小公司，佔有 30% 的原始 datasets
+  - 已經建立好模型跟預測

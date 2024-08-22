@@ -67,7 +67,7 @@ def download_global_weights():
         return False
 
 if __name__ == "__main__":
-    models = [YOLO('yolov8n-cls.pt') for _ in range(n)]
+    models = [YOLO('yolov8n.pt') for _ in range(n)]
     for i in range(n):
         # Train the model locally and save weights to file
         weights_file = train_on_client(models[i], datasets[i], epochs_client, i)
