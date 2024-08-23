@@ -7,8 +7,13 @@ n = 2  # Number of clients
 epochs_client = 50
 imgsz = 640  # Image size for training
 datasets = [
-    "/mnt/c/Users/Kevin/FedAvg/dataset/client1",
-    "/mnt/c/Users/Kevin/FedAvg/dataset/client2",
+    "/Users/kuangsin/FedAvg/image_processing/client1/Orchid_label.v5i.yolov8/data.yaml",
+    "/Users/kuangsin/FedAvg/image_processing/client2/Orchid_label.v6i.yolov8/data.yaml",
+]
+
+evalsets = [
+    "/Users/kuangsin/FedAvg/image_processing/client1/Orchid_label.v5i.yolov8/valid/data.yaml",
+    "/Users/kuangsin/FedAvg/image_processing/client2/Orchid_label.v6i.yolov8/valid/data.yaml",
 ]
 weights_file_template = 'client_{client_id}_weights.pth'
 global_weights_file = 'downloaded_global_weights.pth'
@@ -21,8 +26,8 @@ def get_files_in_path(directory_path):
     return file_names
 
 def evaluate_model(model, dataset_path):
-    results0 = model(get_files_in_path(dataset_path + '/0/'))
-    results1 = model(get_files_in_path(dataset_path + '/1/'))
+    results0 = model(get_files_in_path(dataset_path))
+    results1 = model(get_files_in_path(dataset_path))
     cnt = 0
     tot = len(results0)
     for result in results0:
@@ -80,5 +85,5 @@ if __name__ == "__main__":
                 global_weights = torch.load(global_weights_file)
                 models[i].load_state_dict(global_weights)
                 # Evaluate the updated model
-                local_eval = evaluate_model(models[i], datasets[i] + '/test')
+                local_eval = evaluate_model(models[i], evalsets[i])
                 print(f"Client {i} local evaluation after update: {local_eval}")

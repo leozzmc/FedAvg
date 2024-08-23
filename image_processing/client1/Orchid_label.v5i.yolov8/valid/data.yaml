@@ -1,0 +1,12 @@
+val: images/
+
+
+nc: 1
+names: ['leaf']
+
+roboflow:
+  workspace: kevinliu
+  project: orchid_label
+  version: 5
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/kevinliu/orchid_label/dataset/5
