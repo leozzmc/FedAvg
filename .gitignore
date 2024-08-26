@@ -1,3 +1,6 @@
 /dataset/
 /runs/
 .DS_Store
+/image_processing/Orchid_label.v2i.yolov8/
+/image_processing/Orchid_label.v3i.yolov8/
+/image_processing/Orchid_label.v4i.yolov8/
