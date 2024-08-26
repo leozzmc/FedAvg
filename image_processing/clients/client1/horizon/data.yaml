@@ -1,0 +1,13 @@
+train: /Users/kuangsin/FedAvg/image_processing/clients/client1/horizon/train/images
+val: /Users/kuangsin/FedAvg/image_processing/clients/client1/horizon/valid/images
+test: /Users/kuangsin/FedAvg/image_processing/clients/client1/horizon/test/images
+
+nc: 1
+names: ['leaf']
+
+roboflow:
+  workspace: kevinliu
+  project: orchid_label
+  version: 9
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/kevinliu/orchid_label/dataset/9
