@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 weights_dir = 'client_weights'
 os.makedirs(weights_dir, exist_ok=True)
-n = 2  # Number of clients
+n = 1  # Number of clients
 global_weights_file = 'global_weights.pth'
 
 def average_weights(weights_list):
@@ -45,6 +45,35 @@ def upload_weights(client_id):
         return jsonify({"status": "success"})
 
     return jsonify({"status": "pending"})
+
+# @app.route('/api/upload_weights/<int:client_id>', methods=['POST'])
+# def upload_weights(client_id):
+#     if 'file' not in request.files:
+#         return jsonify({"status": "error", "message": "No file part"}), 400
+#     file = request.files['file']
+#     if file.filename == '':
+#         return jsonify({"status": "error", "message": "No selected file"}), 400
+#     filepath = os.path.join(weights_dir, f'client_{client_id}_weights.pth')
+#     file.save(filepath)
+
+#     # Check if all clients have uploaded their weights
+#     uploaded_files = [f for f in os.listdir(weights_dir) if f.startswith('client_') and f.endswith('_weights.pth')]
+    
+#     if len(uploaded_files) == n:
+#         weights_list = []
+#         for uploaded_file in uploaded_files:
+#             weights = torch.load(os.path.join(weights_dir, uploaded_file))
+#             weights_list.append(weights)
+#         global_weights = average_weights(weights_list)
+#         torch.save(global_weights, global_weights_file)
+#         # Clear the client weights files
+#         for uploaded_file in uploaded_files:
+#             os.remove(os.path.join(weights_dir, uploaded_file))
+#         return jsonify({"status": "success"})
+
+#     # Modified here to always return 'pending' only on first uploads
+    return jsonify({"status": "pending"}), 202
+
 
 @app.route('/api/download_global_weights', methods=['GET'])
 def download_global_weights():
