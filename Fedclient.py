@@ -1,36 +1,64 @@
-from ultralytics import YOLO
 import os
-import requests
+import matplotlib.pyplot as plt
 import torch
+import requests
 
 class FedClient:
     
     def __init__(self) -> None:
         self.weights_file_template = 'client_{client_id}_weights.pth'
         self.global_weights_file = 'downloaded_global_weights.pth'
+        self.accuracy_history = {1: [], 2: []}  # Dictionary to store accuracies for both models
+    
+    def plot_accuracy_trend(self, client_id, iteration, accuracy_list, save_dir='accuracy_trends'):
+        # Update accuracy history for each model
+        for model_id, accuracy in enumerate(accuracy_list, start=1):
+            self.accuracy_history[model_id].append((int(iteration), accuracy))
 
-    @staticmethod
-    def get_files_in_path(directory_path):
-        file_names = []
-        for entry in os.listdir(directory_path):
-            if os.path.isfile(os.path.join(directory_path, entry)):
-                file_names.append(os.path.join(directory_path, entry))
-        return file_names
+        # Plot the line graph for both models
+        plt.figure()
+        for model_id, accuracies in self.accuracy_history.items():
+            if accuracies:  # Ensure there's data to plot
+                iterations, accuracy_values = zip(*accuracies)
+                plt.plot(iterations, accuracy_values, marker='o', linestyle='-', label=f'Model {model_id}')
 
-    def evaluate_model(self, model, dataset_path):
-        results0 = model(self.get_files_in_path(dataset_path))
-        results1 = model(self.get_files_in_path(dataset_path))
-        cnt = 0
-        tot = len(results0)
-        for result in results0:
-            cnt += (result.probs.data[0].item() > 0.5)
-        tot += len(results1)
-        for result in results1:
-            cnt += (result.probs.data[1].item() > 0.5)
-        return {"accuracy": cnt / tot}  # Example metric
+        plt.title(f'Global Accuracy Trend over FedAvg Iterations (Client {client_id})')
+        plt.xlabel('Iteration')
+        plt.ylabel('Accuracy')
+        plt.grid(True)
+        plt.legend()
+
+
+        os.makedirs(save_dir, exist_ok=True)
+        save_path = os.path.join(save_dir, f'accuracy_trend_client_{client_id}.png')
+        
+        print(f"Saving plot to: {save_path}")  # Debug info
+        
+        plt.savefig(save_path)
+        plt.close()
+
+    def evaluate_model_logic(self, model, dataset_path):
+        # Load the dataset from the dataset_path (data.yaml) and perform evaluation
+        results = model.val(data=dataset_path)  # `val` function is typically used for evaluation
+        # Extract the accuracy or relevant metric
+        accuracy = results.box.map  # Mean Average Precision (mAP)
+        return accuracy
+
+    # def evaluate_model(self, models, dataset_paths, iteration, client_id):
+    #     accuracies = []
+    #     for model, dataset_path in zip(models, dataset_paths):
+    #         accuracy = self.evaluate_model_logic(model, dataset_path)
+    #         accuracies.append(accuracy)
+    #     self.plot_accuracy_trend(client_id=client_id, iteration=iteration, accuracy_list=accuracies)
+    #     return accuracies
+    def evaluate_model(self, model, dataset_path, iteration, client_id):
+        accuracy = self.evaluate_model_logic(model, dataset_path)
+        self.plot_accuracy_trend(client_id=client_id, iteration=iteration, accuracy_list=[accuracy])
+        return {'accuracy': accuracy}
+
 
     def train_on_client(self, model, dataset_path, epochs, batch_size, client_id):
-        model.train(data=dataset_path, epochs=epochs, batch=batch_size, save=True)
+        model.train(data=dataset_path, epochs=epochs, batch=batch_size, save=False)
         local_weights = model.state_dict()  # Get the trained model weights
         # Save weights to file
         weights_file = self.weights_file_template.format(client_id=client_id)
@@ -62,10 +90,3 @@ class FedClient:
             print(f"Failed to download global weights: {response.status_code}")
             print(response.text)
             return False
-
-# # Example usage
-# if __name__ == "__main__":
-#     fedclient = FedClient()
-#     model = YOLO('yolov8n.pt')
-#     # Example usage of FedClient methods
-#     fedclient.train_on_client(model, '/path/to/data.yaml', epochs=10, batch_size=16, client_id=1)
