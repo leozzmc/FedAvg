@@ -1,5 +1,5 @@
 from ultralytics import YOLO
-from Fedclient import FedClient
+from Fedclient_2 import FedClient
 import os
 import torch
 import matplotlib.pyplot as plt

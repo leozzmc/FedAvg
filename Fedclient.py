@@ -2,6 +2,7 @@ import os
 import matplotlib.pyplot as plt
 import torch
 import requests
+import time
 
 class FedClient:
     
@@ -44,13 +45,6 @@ class FedClient:
         accuracy = results.box.map  # Mean Average Precision (mAP)
         return accuracy
 
-    # def evaluate_model(self, models, dataset_paths, iteration, client_id):
-    #     accuracies = []
-    #     for model, dataset_path in zip(models, dataset_paths):
-    #         accuracy = self.evaluate_model_logic(model, dataset_path)
-    #         accuracies.append(accuracy)
-    #     self.plot_accuracy_trend(client_id=client_id, iteration=iteration, accuracy_list=accuracies)
-    #     return accuracies
     def evaluate_model(self, model, dataset_path, iteration, client_id):
         accuracy = self.evaluate_model_logic(model, dataset_path)
         self.plot_accuracy_trend(client_id=client_id, iteration=iteration, accuracy_list=[accuracy])
@@ -90,3 +84,15 @@ class FedClient:
             print(f"Failed to download global weights: {response.status_code}")
             print(response.text)
             return False
+        
+    def check_server_for_global_weights(self, max_retry=10, wait_time=20):
+        """Periodically checks if the global weights are available for download."""
+        for _ in range(max_retry):
+            response = requests.get("http://localhost:5000/api/download_global_weights")
+            if response.status_code == 200:
+                return True
+            else:
+                print("Global weights not available yet. Retrying...")
+                time.sleep(wait_time)
+        return False
+
