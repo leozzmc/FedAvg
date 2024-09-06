@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, jsonify, send_file, request  # 需要從 flask 匯入 request
 from collections import OrderedDict
 import torch
 import os
+import requests
 import threading
 
 app = Flask(__name__)
@@ -27,7 +28,7 @@ def notify_clients():
     global clients_notified
     for client_id in range(1, n + 1):
         url = f"http://localhost:5000/api/notify_client/{client_id}"
-        request.post(url)  # Notifies the clients that global weights are ready
+        requests.post(url)  # Notifies the clients that global weights are ready
     clients_notified = set()
 
 @app.route('/api/upload_weights/<int:client_id>/<int:model_id>', methods=['POST'])
@@ -47,7 +48,8 @@ def upload_weights(client_id, model_id):
     if len([c for c in uploaded_clients if c[1] == model_id]) == n:
         weights_list = []
         for client_id, model_id in uploaded_clients:
-            weights = torch.load(os.path.join(weights_dir, f'client_{client_id}_model_{model_id}_weights.pth'))
+            # weights = torch.load(os.path.join(weights_dir, f'client_{client_id}_model_{model_id}_weights.pth'))
+            weights = torch.load(os.path.join(weights_dir, f'client_{client_id}_model_{model_id}_weights.pth'), weights_only=True)
             weights_list.append(weights)
         global_weights = average_weights(weights_list)
         torch.save(global_weights, f'global_model_{model_id}_weights.pth')

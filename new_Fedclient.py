@@ -41,6 +41,20 @@ class FedClient:
 
         return response.json()
 
+    # def download_global_weights(self, client_id, model_id):
+    #     url = f"http://localhost:5000/api/download_global_weights/{client_id}/{model_id}"
+    #     response = requests.get(url)
+
+    #     if response.status_code == 200:
+    #         global_weights_file = self.global_weights_file_template.format(client_id=client_id, model_id=model_id)
+    #         os.makedirs(os.path.dirname(global_weights_file), exist_ok=True)
+    #         with open(global_weights_file, 'wb') as f:
+    #             f.write(response.content)
+    #         return True
+    #     else:
+    #         print(f"Failed to download global weights for model {model_id}: {response.status_code}")
+    #         print(response.text)
+    #         return False
     def download_global_weights(self, client_id, model_id):
         url = f"http://localhost:5000/api/download_global_weights/{client_id}/{model_id}"
         response = requests.get(url)
@@ -50,11 +64,15 @@ class FedClient:
             os.makedirs(os.path.dirname(global_weights_file), exist_ok=True)
             with open(global_weights_file, 'wb') as f:
                 f.write(response.content)
-            return True
+            
+        
+            global_weights = torch.load(global_weights_file)
+            return global_weights
         else:
             print(f"Failed to download global weights for model {model_id}: {response.status_code}")
             print(response.text)
-            return False
+            return None 
+
 
     def check_global_weights_status(self):
         url = "http://localhost:5000/api/check_global_weights_status"
