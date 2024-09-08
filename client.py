@@ -20,9 +20,11 @@ if __name__ == "__main__":
     clientId = int(input("Input client ID:  "))
     
     datasets = [
-        f"/Users/kuangsin/FedAvg/clients/client{clientId}/horizon/data.yaml",
-        f"/Users/kuangsin/FedAvg/clients/client{clientId}/top/data.yaml",
+        f"/mnt/c/Users/Kevin/FedAvg/clients/client{clientId}/horizon/data.yaml",
+       
     ]
+
+    #  f"/Users/kuangsin/FedAvg/clients/client{clientId}/top/data.yaml",
     
     if input("Start pre-trained phases? (y/n): ").lower() == 'y':
         print("Pre-training phases...\n")
