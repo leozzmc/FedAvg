@@ -15,22 +15,3 @@ Running FedAverage algorithm on a single server for federation learning
 - `python3 client.py`
 
 
-## Image Processing - To prepare datasets for YOLOv8 training
-
-Files:
-
-
-- 📄 `img_processor.py`: is for generating bounding boxes for existing orchid images under `/orchid_image`, the output images will under `/train` folder
-
-- 📄 `csv2YOLO.py`:  Covert existing orchid feature csv into a single annoation file under `/labels` folder
-
-
-## Datasets
-
-- `image_processing/Orchid_label.v2i.yolo.8`
-
-Training command:
-```
-yolo train data=data.yaml model=yolov8n.pt epochs=50 batch=16
-```
-
