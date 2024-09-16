@@ -15,3 +15,12 @@ Running FedAverage algorithm on a single server for federation learning
 - `python3 client.py`
 
 
+## Sample Traning Results
+
+![PR_curve](https://hackmd.io/_uploads/Sy4-6ZSp0.png)
+
+![R_curve](https://hackmd.io/_uploads/ByEZ6brTR.png)
+
+![results](https://hackmd.io/_uploads/r1VZpZS60.png)
+
+![val_batch0_labels](https://hackmd.io/_uploads/r1ymp-HpA.jpg)
