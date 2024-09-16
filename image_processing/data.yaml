@@ -1,7 +1,0 @@
-train: /mnt/c/Users/Kevin/FedAvg/image_processing/train/roi
-val: /mnt/c/Users/Kevin/FedAvg/image_processing/train/
-
-nc: 1  # 只有一個類別
-
-names:
-  0: 'leaf'
