@@ -1,97 +1,130 @@
-from ultralytics import YOLO
+import os
+import time
+import requests
+import threading
+import csv
 from Fedclient import FedClient
-import os, time, requests
-import torch
+from ultralytics import YOLO
 
-iterations = 1  # Number of federation iterations
-modelcount = 2  # 2 models
+iterations = 20  # Number of federation iterations
+modelcount = 1  # Number of models (you can modify if more than 1 model is used)
 epochs_client = 100
 imgsz = 640
 batch_size = 16
-
 global_weights_file = 'downloaded_global_weights.pth'
 accuracy_trend = []  # Store accuracy for each training
 
-if __name__ == "__main__":
-    
+def create_model_directory(client_id, model_id):
+    """Creates directory for a specific model and client if it doesn't exist."""
+    directory = f'model/client_{client_id}/model_{model_id}'
+    os.makedirs(directory, exist_ok=True)
+    return directory
+
+def create_global_weight_directory():
+    """Creates global weight directory for a specific model if it doesn't exist."""
+    directory = f'model/global_weight'
+    os.makedirs(directory, exist_ok=True)
+    return directory
+
+def pretrained(client_id, datasets):
+    ''' Pre-train the given datasets with YOLOv8 model '''
+    print("Pre-training phases...\n")
+    models = [YOLO('yolov8n.pt') for _ in range(modelcount)]
+    fedclient = FedClient()
+    for i in range(modelcount):
+        model_dir = create_model_directory(client_id, i)
+        weights_file = fedclient.train_on_client(models[i], datasets[i], epochs_client, batch_size, client_id, i)
+        print(f"Pre-training complete for Model {i}. Weights saved at {weights_file}.")
+
+def retrain_and_evaluate(client_id, datasets, iterations):
+    ''' Retrain the model with global weights and calculate accuracy using the test set. '''
+    print(f"Client {client_id}: Loading global weights and retraining...\n")
     fedclient = FedClient()
     
-    # Pre-trained phases, train for two models
-    clientId = int(input("Input client ID:  "))
+    models = [YOLO('yolov8n.pt') for _ in range(modelcount)] 
+    accuracies = []
+
+    for model_id in range(modelcount):
+        global_weights = fedclient.download_global_weights(client_id, model_id)
     
+        try:
+            models[model_id].load_state_dict(global_weights, strict=False) 
+            print(f"Successfully loaded global weights for Model {model_id}.")
+        except RuntimeError as e:
+            print(f"Error loading global weights for Model {model_id}: {e}")
+        
+        if input(f"Do you want to retrain Model {model_id}? (y/n): ").lower() == 'y':
+            weights_file = fedclient.train_on_client(models[model_id], datasets[model_id], epochs_client, batch_size, client_id, model_id)
+            print(f"Retraining complete for Model {model_id}. New local weights saved at {weights_file}.")
+            
+            # **新增加的測試階段**
+            print(f"Evaluating accuracy on the test set for Model {model_id}...")
+            accuracy_data = fedclient.evaluate_model(models[model_id], datasets[model_id], iterations, client_id)
+            accuracies.append(accuracy_data['accuracy'])
+
+    # 將準確率寫入 CSV 文件
+    # csv_file = f'client_{client_id}_accuracy.csv'
+    # with open(csv_file, mode='w', newline='') as file:
+    #     writer = csv.writer(file)
+    #     writer.writerow(['ModelID', 'Accuracy', 'Iteration'])
+    #     for model_id, accuracy in enumerate(accuracies):
+    #         writer.writerow([model_id, accuracy, iterations])
+
+    # print(f"Client {client_id}: Accuracy saved to {csv_file}")
+    csv_file = f'client_{client_id}_accuracy.csv'
+    file_exists = os.path.isfile(csv_file)
+
+    with open(csv_file, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        if not file_exists:
+            writer.writerow(['ModelID', 'Accuracy', 'Iteration'])
+        for model_id, accuracy in enumerate(accuracies):
+            writer.writerow([model_id, accuracy, iterations])
+
+    print(f"Client {client_id}: Accuracy saved to {csv_file}")
+
+def listen_for_global_weights(client_id, model_id):
+    """Listener that waits for the server to notify when global weights are ready."""
+    while True:
+        print(f"Client {client_id}: Listening for notification for Model {model_id} global weights...")
+        response = requests.get(f'http://localhost:5000/api/check_global_weights_status')
+        if response.json().get('status') == 'updated':
+            print(f"Client {client_id}: Global weights are ready for Model {model_id}. Downloading...")
+            fedclient = FedClient()
+            create_global_weight_directory()
+            if fedclient.download_global_weights(client_id, model_id):
+                print(f"Client {client_id}: Global weights downloaded for Model {model_id}.")
+            break
+        time.sleep(10)  # Wait for 5 seconds before checking again
+
+def main():
+    client_id = int(input("Please enter a client ID: "))
+    fedclient = FedClient()
     datasets = [
-        f"/mnt/c/Users/Kevin/FedAvg/clients/client{clientId}/horizon/data.yaml",
-       
+        f"/Users/kuangsin/FedAvg/clients/client{client_id}/horizon/data.yaml",
+        f"/Users/kuangsin/FedAvg/clients/client{client_id}/top/data.yaml",
     ]
+    
+    
 
-    #  f"/Users/kuangsin/FedAvg/clients/client{clientId}/top/data.yaml",
-    
-    if input("Start pre-trained phases? (y/n): ").lower() == 'y':
-        print("Pre-training phases...\n")
-        models = [YOLO('yolov8n.pt') for _ in range(modelcount)]
-        for i in range(modelcount):
-            fedclient.train_on_client(models[i], datasets[i], epochs_client, batch_size, clientId)
-    else:
-        print("Skip pre-trained phase.\n")
-    
-    # Federation Learning phases
-    print("Federated Learning phases...\n")
-    models = [YOLO('last.pt'), YOLO('above_last.pt')]
-    
-    for iteration in range(1, iterations + 1):
-        iteration_accuracies = []
-        if input(f'Upload weights for client {clientId}? (y/n): ').lower() == 'y':
-            weights_file = f'client_{clientId}_weights.pth'
-            upload_response = fedclient.upload_weights(clientId, weights_file)
-        else:
-            break
+    # Checking if want to pretrain the dataset
+    if input("Start pre-trained phases? (y/n): ").lower() == 'y': 
+        pretrained(client_id, datasets)
+    else: 
+        print("Skipping pre-trained phase.\n")
+
+    # Upload weights for both models
+    for iter in range(iterations):
+        for model_id in range(modelcount):
+            weights_file = f'model/client_{client_id}/model_{model_id}/client_{client_id}_model_{model_id}_weights.pth'
+            upload_response = fedclient.upload_weights(client_id, model_id, weights_file)
+
+            if upload_response.get('status') == 'pending':
+                listener_thread = threading.Thread(target=listen_for_global_weights, args=(client_id, model_id))
+                listener_thread.start()
         
-        # Automatically handle pending status
-        while upload_response.get('status') == 'pending':
-            print("Waiting for other clients to upload their weights...")
-            time.sleep(10)  # Wait for 10 seconds before checking again, could replace with back-off algorithm
-            status_response = fedclient.check_global_weights_status()
-            if status_response.get('status') == 'updated':
-                print("Global weights have been updated. Downloading global weights...\n")
-                if fedclient.download_global_weights(clientId):
-                    print("Global weights downloaded successfully.")
-                    break
-            else:
-                print("Global weights not updated yet. Continuing to wait...")
-        # This may be another clients, or the last client who just uploaded to the server.
-        if upload_response.get('status') == 'success':
-            print("Weights uploaded successfully.")
-            status_response = fedclient.check_global_weights_status()
-            if status_response.get('status') == 'updated':
-                print("Global weights have been updated. Downloading global weights...\n")
-                if fedclient.download_global_weights(clientId):
-                    print("Global weights downloaded successfully.")
-            else:
-                print("Global weights not updated yet. Continuing to wait...")
-        
-        # Every clients who are retrying are now allowed to upated their weights
-        status_response = fedclient.check_global_weights_status()
-        if status_response.get('status') == 'updated':
-            for i in range(modelcount):
-                        # Load global weights into the model
-                        global_weights = torch.load(global_weights_file)
-                        models[i].load_state_dict(global_weights)
+        # Retrain and evaluate after receiving global weights
+        retrain_and_evaluate(client_id, datasets, iter)
 
-                        # Retrain with the updated global weights
-                        print(f"Retraining Model {i}...\n")
-                        fedclient.train_on_client(models[i], datasets[i], epochs_client, batch_size, clientId)
-
-                        # Evaluate the updated model
-                        local_eval = fedclient.evaluate_model(models[i], datasets[i], iteration, clientId)
-                        if 'accuracy' in local_eval:
-                            iteration_accuracies.append(local_eval['accuracy'])
-                            print(f"Client {clientId} - Model {i} Local evaluation results: {local_eval}")
-
-                        # Save training results
-                        csv_filename = f"client_{clientId}_training_results.csv"
-                        with open(csv_filename, 'w') as f:
-                            f.write("iterations,accuracy\n")
-                            for i, accuracy in enumerate(iteration_accuracies, start=1):
-                                f.write(f"{i},{accuracy}\n")
-                        print(f"Saved training results to {csv_filename}")
-            break
+if __name__ == "__main__":
+    main()

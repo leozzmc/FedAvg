@@ -1,7 +1,8 @@
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, jsonify, send_file, request 
 from collections import OrderedDict
 import torch
 import os
+import requests
 import threading
 
 app = Flask(__name__)
@@ -27,46 +28,41 @@ def notify_clients():
     global clients_notified
     for client_id in range(1, n + 1):
         url = f"http://localhost:5000/api/notify_client/{client_id}"
-        request.post(url)
+        requests.post(url)  # Notifies the clients that global weights are ready
     clients_notified = set()
 
-@app.route('/api/upload_weights/<int:client_id>', methods=['POST'])
-def upload_weights(client_id):
+@app.route('/api/upload_weights/<int:client_id>/<int:model_id>', methods=['POST'])
+def upload_weights(client_id, model_id):
     global global_weights_updated
     if 'file' not in request.files:
         return jsonify({"status": "error", "message": "No file part"}), 400
     file = request.files['file']
     if file.filename == '':
         return jsonify({"status": "error", "message": "No selected file"}), 400
-    if client_id in uploaded_clients:
-        return jsonify({"status": "error", "message": "Client has already uploaded weights"}), 400
 
-    filepath = os.path.join(weights_dir, f'client_{client_id}_weights.pth')
+    filepath = os.path.join(weights_dir, f'client_{client_id}_model_{model_id}_weights.pth')
     file.save(filepath)
-    uploaded_clients.add(client_id)
+    uploaded_clients.add((client_id, model_id))
 
-    # Check if all clients have uploaded their weights
-    if len(uploaded_clients) == n:
+    # Check if all clients have uploaded their weights for this model
+    if len([c for c in uploaded_clients if c[1] == model_id]) == n:
         weights_list = []
-        for client_id in uploaded_clients:
-            weights = torch.load(os.path.join(weights_dir, f'client_{client_id}_weights.pth'))
+        for client_id, model_id in uploaded_clients:
+            # weights = torch.load(os.path.join(weights_dir, f'client_{client_id}_model_{model_id}_weights.pth'))
+            weights = torch.load(os.path.join(weights_dir, f'client_{client_id}_model_{model_id}_weights.pth'), weights_only=True)
             weights_list.append(weights)
         global_weights = average_weights(weights_list)
-        torch.save(global_weights, global_weights_file)
+        torch.save(global_weights, f'global_model_{model_id}_weights.pth')
         global_weights_updated = True
-        # Clear the client weights files
-        for client_id in uploaded_clients:
-            os.remove(os.path.join(weights_dir, f'client_{client_id}_weights.pth'))
-        uploaded_clients.clear()
-        threading.Thread(target=notify_clients).start()
+        uploaded_clients.clear()  # Clear the list for next iteration
+        notify_clients()  # Notifies all clients that global weights are ready
         return jsonify({"status": "success"})
 
     return jsonify({"status": "pending"})
 
-@app.route('/api/download_global_weights/<int:client_id>', methods=['GET'])
-def download_global_weights(client_id):
-    if not global_weights_updated:
-        return jsonify({"status": "error", "message": "Global weights not updated yet"}), 400
+@app.route('/api/download_global_weights/<int:client_id>/<int:model_id>', methods=['GET'])
+def download_global_weights(client_id, model_id):
+    global_weights_file = f'global_model_{model_id}_weights.pth'
     if not os.path.exists(global_weights_file):
         return jsonify({"status": "error", "message": "Global weights not available"}), 400
 
@@ -74,6 +70,7 @@ def download_global_weights(client_id):
 
 @app.route('/api/check_global_weights_status', methods=['GET'])
 def check_global_weights_status():
+    global global_weights_updated
     if global_weights_updated:
         return jsonify({"status": "updated"})
     else:
