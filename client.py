@@ -8,7 +8,7 @@ from ultralytics import YOLO
 
 iterations = 20  # Number of federation iterations
 modelcount = 1  # Number of models (you can modify if more than 1 model is used)
-epochs_client = 100
+epochs_client = 50
 imgsz = 640
 batch_size = 16
 global_weights_file = 'downloaded_global_weights.pth'

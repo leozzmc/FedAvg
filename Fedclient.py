@@ -12,7 +12,8 @@ class FedClient:
         # Load the dataset from the dataset_path (data.yaml) and perform evaluation
         results = model.val(data=dataset_path)  # `val` function is typically used for evaluation
         # Extract the accuracy or relevant metric
-        accuracy = results.box.map  # Mean Average Precision (mAP)
+        # accuracy = results.box.map  # Mean Average Precision (mAP)
+        accuracy = results.box.map50 
         return accuracy
     
     def evaluate_model(self, model, dataset_path, iteration, client_id):
