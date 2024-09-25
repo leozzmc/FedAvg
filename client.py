@@ -57,20 +57,11 @@ def retrain_and_evaluate(client_id, datasets, iterations):
             weights_file = fedclient.train_on_client(models[model_id], datasets[model_id], epochs_client, batch_size, client_id, model_id)
             print(f"Retraining complete for Model {model_id}. New local weights saved at {weights_file}.")
             
-            # **新增加的測試階段**
             print(f"Evaluating accuracy on the test set for Model {model_id}...")
             accuracy_data = fedclient.evaluate_model(models[model_id], datasets[model_id], iterations, client_id)
             accuracies.append(accuracy_data['accuracy'])
 
     # 將準確率寫入 CSV 文件
-    # csv_file = f'client_{client_id}_accuracy.csv'
-    # with open(csv_file, mode='w', newline='') as file:
-    #     writer = csv.writer(file)
-    #     writer.writerow(['ModelID', 'Accuracy', 'Iteration'])
-    #     for model_id, accuracy in enumerate(accuracies):
-    #         writer.writerow([model_id, accuracy, iterations])
-
-    # print(f"Client {client_id}: Accuracy saved to {csv_file}")
     csv_file = f'client_{client_id}_accuracy.csv'
     file_exists = os.path.isfile(csv_file)
 
@@ -104,9 +95,6 @@ def main():
         f"/Users/kuangsin/FedAvg/clients/client{client_id}/horizon/data.yaml",
         f"/Users/kuangsin/FedAvg/clients/client{client_id}/top/data.yaml",
     ]
-    
-    
-
     # Checking if want to pretrain the dataset
     if input("Start pre-trained phases? (y/n): ").lower() == 'y': 
         pretrained(client_id, datasets)

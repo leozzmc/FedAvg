@@ -52,7 +52,6 @@ class FedClient:
             with open(global_weights_file, 'wb') as f:
                 f.write(response.content)
             
-        
             global_weights = torch.load(global_weights_file)
             return global_weights
         else:
