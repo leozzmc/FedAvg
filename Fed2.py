@@ -31,11 +31,9 @@ class FedClient:
     def evaluate_model_logic(self, model, dataset_path):
         """Evaluates the model on the dataset."""
         results = model.val(data=dataset_path, imgsz=640)
-        metrics = results.metrics  # YOLOv8 的评估指标
-
-        # 获取模型的各项评估指标
-        accuracy = metrics.map()  # Mean Average Precision (mAP) between 0.5 to 0.95 IoU thresholds
-        bounding_box_areas = []  # 可选：可提取额外的 box 信息，视实际需求而定
+        metrics = results.metrics
+        accuracy = metrics.map() 
+        bounding_box_areas = []  
         
         return accuracy, bounding_box_areas
 
