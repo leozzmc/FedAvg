@@ -1,8 +1,8 @@
 
-Orchid_label - v9 Client1 _horizon
+Orchid_label - v13 2024-10-09 6:02am
 ==============================
 
-This dataset was exported via roboflow.com on August 26, 2024 at 4:56 AM GMT
+This dataset was exported via roboflow.com on October 9, 2024 at 6:03 AM GMT
 
 Roboflow is an end-to-end computer vision platform that helps you
 * collaborate with your team on computer vision projects
@@ -17,7 +17,7 @@ visit https://github.com/roboflow/notebooks
 
 To find over 100k other datasets and pre-trained models, visit https://universe.roboflow.com
 
-The dataset includes 83 images.
+The dataset includes 102 images.
 Leaf are annotated in YOLOv8 format.
 
 The following pre-processing was applied to each image:
