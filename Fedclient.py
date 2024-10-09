@@ -48,6 +48,10 @@ class FedClient:
 
         if response.status_code == 200:
             global_weights_file = self.global_weights_file_template.format(client_id=client_id, model_id=model_id)
+            if os.path.exists(global_weights_file):
+                print(f"Global weights file saved successfully at {global_weights_file}, size: {os.path.getsize(global_weights_file)} bytes")
+            else:
+                print(f"Global weights file not found: {global_weights_file}")
             os.makedirs(os.path.dirname(global_weights_file), exist_ok=True)
             with open(global_weights_file, 'wb') as f:
                 f.write(response.content)

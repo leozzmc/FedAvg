@@ -6,9 +6,9 @@ import csv
 from Fedclient import FedClient
 from ultralytics import YOLO
 
-iterations = 20  # Number of federation iterations
+iterations = 10  # Number of federation iterations
 modelcount = 1  # Number of models (you can modify if more than 1 model is used)
-epochs_client = 50
+epochs_client = 10
 imgsz = 640
 batch_size = 16
 global_weights_file = 'downloaded_global_weights.pth'
@@ -46,9 +46,13 @@ def retrain_and_evaluate(client_id, datasets, iterations):
 
     for model_id in range(modelcount):
         global_weights = fedclient.download_global_weights(client_id, model_id)
+        model_state_dict = models[model_id].state_dict()
     
         try:
-            models[model_id].load_state_dict(global_weights, strict=False) 
+            # Remove layers from global weights that don't match model
+            filtered_state_dict = {k: v for k, v in global_weights.items() if k in model_state_dict and v.size() == model_state_dict[k].size()}
+            models[model_id].load_state_dict(filtered_state_dict, strict=False) 
+            print(f"Model's first layer weights after loading global weights: {list(models[model_id].parameters())[0]}")
             print(f"Successfully loaded global weights for Model {model_id}.")
         except RuntimeError as e:
             print(f"Error loading global weights for Model {model_id}: {e}")
