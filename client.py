@@ -36,12 +36,54 @@ def pretrained(client_id, datasets):
         weights_file = fedclient.train_on_client(models[i], datasets[i], epochs_client, batch_size, client_id, i)
         print(f"Pre-training complete for Model {i}. Weights saved at {weights_file}.")
 
+# def retrain_and_evaluate(client_id, datasets, iterations):
+#     ''' Retrain the model with global weights and calculate accuracy using the test set. '''
+#     print(f"Client {client_id}: Loading global weights and retraining...\n")
+#     fedclient = FedClient()
+    
+#     models = [YOLO('yolov8n.pt') for _ in range(modelcount)] 
+#     accuracies = []
+
+#     for model_id in range(modelcount):
+#         global_weights = fedclient.download_global_weights(client_id, model_id)
+#         model_state_dict = models[model_id].state_dict()
+    
+#         try:
+#             # Remove layers from global weights that don't match model
+#             filtered_state_dict = {k: v for k, v in global_weights.items() if k in model_state_dict and v.size() == model_state_dict[k].size()}
+#             models[model_id].load_state_dict(filtered_state_dict, strict=False) 
+#             print(f"Model's first layer weights after loading global weights: {list(models[model_id].parameters())[0]}")
+#             print(f"Successfully loaded global weights for Model {model_id}.")
+#         except RuntimeError as e:
+#             print(f"Error loading global weights for Model {model_id}: {e}")
+        
+#         if input(f"Do you want to retrain Model {model_id}? (y/n): ").lower() == 'y':
+#             weights_file = fedclient.train_on_client(models[model_id], datasets[model_id], epochs_client, batch_size, client_id, model_id)
+#             print(f"Retraining complete for Model {model_id}. New local weights saved at {weights_file}.")
+            
+#             print(f"Evaluating accuracy on the test set for Model {model_id}...")
+#             accuracy_data = fedclient.evaluate_model(models[model_id], datasets[model_id], iterations, client_id)
+#             accuracies.append(accuracy_data['accuracy'])
+
+#     # 將準確率寫入 CSV 文件
+#     csv_file = f'client_{client_id}_accuracy.csv'
+#     file_exists = os.path.isfile(csv_file)
+
+#     with open(csv_file, mode='a', newline='') as file:
+#         writer = csv.writer(file)
+#         if not file_exists:
+#             writer.writerow(['ModelID', 'Accuracy', 'Iteration'])
+#         for model_id, accuracy in enumerate(accuracies):
+#             writer.writerow([model_id, accuracy, iterations])
+
+#     print(f"Client {client_id}: Accuracy saved to {csv_file}")
+
 def retrain_and_evaluate(client_id, datasets, iterations):
     ''' Retrain the model with global weights and calculate accuracy using the test set. '''
     print(f"Client {client_id}: Loading global weights and retraining...\n")
     fedclient = FedClient()
     
-    models = [YOLO('yolov8n.pt') for _ in range(modelcount)] 
+    models = [YOLO('last.pt') for _ in range(modelcount)]  # 載入上一次訓練的結果
     accuracies = []
 
     for model_id in range(modelcount):
@@ -77,6 +119,7 @@ def retrain_and_evaluate(client_id, datasets, iterations):
             writer.writerow([model_id, accuracy, iterations])
 
     print(f"Client {client_id}: Accuracy saved to {csv_file}")
+
 
 def listen_for_global_weights(client_id, model_id):
     """Listener that waits for the server to notify when global weights are ready."""

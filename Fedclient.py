@@ -21,7 +21,8 @@ class FedClient:
         return {'accuracy': accuracy}
 
     def train_on_client(self, model, dataset_path, epochs, batch_size, client_id, model_id):
-        model.train(data=dataset_path, epochs=epochs, batch=batch_size, save=True)
+        ## mps -> enable traning on Apple M1, M2 chip
+        model.train(data=dataset_path, epochs=epochs, batch=batch_size, save=True, device="mps")
         local_weights = model.state_dict()  # Get the trained model weights
         # Save weights to file
         weights_file = self.weights_file_template.format(client_id=client_id, model_id=model_id)
