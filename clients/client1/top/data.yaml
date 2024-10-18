@@ -1,6 +1,6 @@
-train: /Users/kuangsin/FedAvg/clients/client1/top/train/images
-val: /Users/kuangsin/FedAvg/clients/client1/top/valid/images
-test: /Users/kuangsin/FedAvg/clients/client1/top/test/images
+train: ../train/images
+val: ../valid/images
+test: ../test/images
 
 nc: 1
 names: ['leaf']
@@ -8,6 +8,6 @@ names: ['leaf']
 roboflow:
   workspace: kevinliu
   project: orchid_label
-  version: 15
+  version: 17
   license: CC BY 4.0
-  url: https://universe.roboflow.com/kevinliu/orchid_label/dataset/15
+  url: https://universe.roboflow.com/kevinliu/orchid_label/dataset/17

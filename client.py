@@ -139,9 +139,9 @@ def main():
     client_id = int(input("Please enter a client ID: "))
     fedclient = FedClient()
     datasets = [
-        f"/Users/kuangsin/FedAvg/clients/client{client_id}/horizon/data.yaml",
         f"/Users/kuangsin/FedAvg/clients/client{client_id}/top/data.yaml",
     ]
+    #f"/Users/kuangsin/FedAvg/clients/client{client_id}/horizon/data.yaml",
     # Checking if want to pretrain the dataset
     if input("Start pre-trained phases? (y/n): ").lower() == 'y': 
         pretrained(client_id, datasets)

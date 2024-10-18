@@ -8,10 +8,10 @@ from Fedclient import FedClient
 from ultralytics import YOLO
 
 iterations = 10  # Number of federation iterations
-modelcount = 1  # Number of models (you can modify if more than 1 model is used)
+modelcount = 2  # Number of models (you can modify if more than 1 model is used)
 epochs_client = 10
 imgsz = 640
-batch_size = 16
+batch_size = 12
 global_weights_file = 'downloaded_global_weights.pth'
 accuracy_trend = []  # Store accuracy for each training
 
@@ -48,9 +48,10 @@ def pretrained(client_id, datasets):
     models = [YOLO('yolov8n.pt') for _ in range(modelcount)]
     fedclient = FedClient()
     for i in range(modelcount):
-        model_dir = create_model_directory(client_id, i)
-        weights_file = fedclient.train_on_client(models[i], datasets[i], epochs_client, batch_size, client_id, i)
-        print(f"Pre-training complete for Model {i}. Weights saved at {weights_file}.")
+        if i==1:
+            model_dir = create_model_directory(client_id, i)
+            weights_file = fedclient.train_on_client(models[i], datasets[i], epochs_client, batch_size, client_id, i)
+            print(f"Pre-training complete for Model {i}. Weights saved at {weights_file}.")
 
 def retrain_and_evaluate(client_id, datasets, iterations):
     ''' Retrain the model with global weights and calculate accuracy using the test set. '''
@@ -64,25 +65,26 @@ def retrain_and_evaluate(client_id, datasets, iterations):
     accuracies = []
 
     for model_id in range(modelcount):
-        global_weights = fedclient.download_global_weights(client_id, model_id)
-        model_state_dict = models[model_id].state_dict()
-    
-        try:
-            # Remove layers from global weights that don't match model
-            filtered_state_dict = {k: v for k, v in global_weights.items() if k in model_state_dict and v.size() == model_state_dict[k].size()}
-            models[model_id].load_state_dict(filtered_state_dict, strict=False) 
-            print(f"Model's first layer weights after loading global weights: {list(models[model_id].parameters())[0]}")
-            print(f"Successfully loaded global weights for Model {model_id}.")
-        except RuntimeError as e:
-            print(f"Error loading global weights for Model {model_id}: {e}")
+        if model_id == 1:
+            global_weights = fedclient.download_global_weights(client_id, model_id)
+            model_state_dict = models[model_id].state_dict()
         
-        if input(f"Do you want to retrain Model {model_id}? (y/n): ").lower() == 'y':
-            weights_file = fedclient.train_on_client(models[model_id], datasets[model_id], epochs_client, batch_size, client_id, model_id)
-            print(f"Retraining complete for Model {model_id}. New local weights saved at {weights_file}.")
+            try:
+                # Remove layers from global weights that don't match model
+                filtered_state_dict = {k: v for k, v in global_weights.items() if k in model_state_dict and v.size() == model_state_dict[k].size()}
+                models[model_id].load_state_dict(filtered_state_dict, strict=False) 
+                print(f"Model's first layer weights after loading global weights: {list(models[model_id].parameters())[0]}")
+                print(f"Successfully loaded global weights for Model {model_id}.")
+            except RuntimeError as e:
+                print(f"Error loading global weights for Model {model_id}: {e}")
             
-            print(f"Evaluating accuracy on the test set for Model {model_id}...")
-            accuracy_data = fedclient.evaluate_model(models[model_id], datasets[model_id], iterations, client_id)
-            accuracies.append(accuracy_data['accuracy'])
+            if input(f"Do you want to retrain Model {model_id}? (y/n): ").lower() == 'y':
+                weights_file = fedclient.train_on_client(models[model_id], datasets[model_id], epochs_client, batch_size, client_id, model_id)
+                print(f"Retraining complete for Model {model_id}. New local weights saved at {weights_file}.")
+                
+                print(f"Evaluating accuracy on the test set for Model {model_id}...")
+                accuracy_data = fedclient.evaluate_model(models[model_id], datasets[model_id], iterations, client_id)
+                accuracies.append(accuracy_data['accuracy'])
 
     # 將準確率寫入 CSV 文件
     csv_file = f'client_{client_id}_accuracy.csv'
@@ -117,8 +119,9 @@ def main():
     fedclient = FedClient()
     datasets = [
         f"/Users/kuangsin/FedAvg/clients/client{client_id}/horizon/data.yaml",
-        f"/Users/kuangsin/FedAvg/clients/client{client_id}/top/data.yaml",
+        f"/Users/kuangsin/FedAvg/clients/client{client_id}/top/data.yaml"
     ]
+    
     # Checking if want to pretrain the dataset
     if input("Start pre-trained phases? (y/n): ").lower() == 'y': 
         pretrained(client_id, datasets)
@@ -128,13 +131,14 @@ def main():
     # Upload weights for both models
     for iter in range(iterations):
         for model_id in range(modelcount):
-            weights_file = f'model/client_{client_id}/model_{model_id}/client_{client_id}_model_{model_id}_weights.pth'
-            upload_response = fedclient.upload_weights(client_id, model_id, weights_file)
+            if model_id==1:
+                weights_file = f'model/client_{client_id}/model_{model_id}/client_{client_id}_model_{model_id}_weights.pth'
+                upload_response = fedclient.upload_weights(client_id, model_id, weights_file)
 
-            if upload_response.get('status') == 'pending':
-                listener_thread = threading.Thread(target=listen_for_global_weights, args=(client_id, model_id))
-                listener_thread.start()
-        
+                if upload_response.get('status') == 'pending':
+                    listener_thread = threading.Thread(target=listen_for_global_weights, args=(client_id, model_id))
+                    listener_thread.start()
+            
         # Retrain and evaluate after receiving global weights
         retrain_and_evaluate(client_id, datasets, iter)
 
