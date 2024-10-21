@@ -9,9 +9,9 @@ from ultralytics import YOLO
 
 iterations = 10  # Number of federation iterations
 modelcount = 2  # Number of models (you can modify if more than 1 model is used)
-epochs_client = 10
+epochs_client = 50
 imgsz = 640
-batch_size = 16
+batch_size = 10
 global_weights_file = 'downloaded_global_weights.pth'
 accuracy_trend = []  # Store accuracy for each training
 

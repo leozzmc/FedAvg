@@ -9,9 +9,9 @@ from ultralytics import YOLO
 
 iterations = 10  # Number of federation iterations
 modelcount = 2  # Number of models (you can modify if more than 1 model is used)
-epochs_client = 2
+epochs_client = 50
 imgsz = 640
-batch_size = 2
+batch_size = 10
 global_weights_file = 'downloaded_global_weights.pth'
 accuracy_trend = []  # Store accuracy for each training
 
@@ -25,7 +25,7 @@ def create_global_weight_directory():
     """Creates global weight directory for a specific model if it doesn't exist."""
     directory = f'model/global_weight'
     os.makedirs(directory, exist_ok=True)
-    return directory
+    return directoryß
 
 def get_latest_train_directory():
     """Gets the latest train directory from /runs/detect, filtering out directories with large numbers."""
