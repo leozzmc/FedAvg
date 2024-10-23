@@ -1,6 +1,6 @@
-train: ../train/images
-val: ../valid/images
-test: ../test/images
+train: /Users/kuangsin/FedAvg/clients/client1/top/train/images
+val: /Users/kuangsin/FedAvg/clients/client1/top/valid/images
+test: /Users/kuangsin/FedAvg/clients/client1/top/test/images
 
 nc: 1
 names: ['leaf']

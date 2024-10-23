@@ -9,9 +9,18 @@ from ultralytics import YOLO
 
 iterations = 10  # Number of federation iterations
 modelcount = 2  # Number of models (you can modify if more than 1 model is used)
-epochs_client = 50
 imgsz = 640
-batch_size = 10
+large_company_pretrain_params = {
+    'epochs': 20,
+    'batch': 64,
+    'lr0': 0.0005,
+    'patience': 5,
+    'momentum': 0.9,
+    'optimizer': 'SGD',
+    'weight_decay': 0.001,
+    'dropout': 0.2,
+    'augment': True
+}
 global_weights_file = 'downloaded_global_weights.pth'
 accuracy_trend = []  # Store accuracy for each training
 
@@ -45,12 +54,13 @@ def copy_last_weights(client_id):
 def pretrained(client_id, datasets):
     ''' Pre-train the given datasets with YOLOv8 model '''
     print("Pre-training phases...\n")
-    models = [YOLO('yolov8n.pt') for _ in range(modelcount)]
+    models = [YOLO('yolov8s.pt') for _ in range(modelcount)]
     fedclient = FedClient()
     for i in range(modelcount):
         if i==1:
             model_dir = create_model_directory(client_id, i)
-            weights_file = fedclient.train_on_client(models[i], datasets[i], epochs_client, batch_size, client_id, i)
+            #weights_file = fedclient.train_on_client(models[i], datasets[i], epochs_client, batch_size, client_id, i, lr0, patience)
+            weights_file = fedclient.train_on_client(models[i], datasets[i], client_id=1, model_id=i, training_params=large_company_pretrain_params)
             print(f"Pre-training complete for Model {i}. Weights saved at {weights_file}.")
 
 def retrain_and_evaluate(client_id, datasets, iterations):
@@ -79,7 +89,8 @@ def retrain_and_evaluate(client_id, datasets, iterations):
                 print(f"Error loading global weights for Model {model_id}: {e}")
             
             if input(f"Do you want to retrain Model {model_id}? (y/n): ").lower() == 'y':
-                weights_file = fedclient.train_on_client(models[model_id], datasets[model_id], epochs_client, batch_size, client_id, model_id)
+                #weights_file = fedclient.train_on_client(models[model_id], datasets[model_id], epochs_client, batch_size, client_id, model_id, lr0, patience)
+                weights_file = fedclient.train_on_client(models[model_id], datasets[model_id], client_id, model_id=i, training_params=large_company_pretrain_params)
                 print(f"Retraining complete for Model {model_id}. New local weights saved at {weights_file}.")
                 
                 print(f"Evaluating accuracy on the test set for Model {model_id}...")
