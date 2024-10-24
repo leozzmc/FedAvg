@@ -47,21 +47,21 @@ class FedClient:
                 dropout=training_params['dropout'],
                 augment=training_params['augment'],
                 save=True,
-                device="mps"  # mps for Apple M1/M2
+                device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
             )
         else:
             model.train(
                 data=dataset_path,
                 epochs=training_params['epochs'],
                 batch=training_params.get('batch', 8),  
-                lr0=training_params.get('lr0', 0.0001),  
-                patience=training_params.get('patience', 5), 
-                optimizer=training_params.get('optimizer', 'Adam'), 
-                weight_decay=training_params.get('weight_decay', 0.0001), 
-                dropout=training_params.get('dropout', 0.2), 
-                augment=training_params.get('augment', True), 
+                # lr0=training_params.get('lr0', 0.0001),  
+                # patience=training_params.get('patience', 5), 
+                # optimizer=training_params.get('optimizer', 'Adam'), 
+                # weight_decay=training_params.get('weight_decay', 0.0001), 
+                # dropout=training_params.get('dropout', 0.2), 
+                # augment=training_params.get('augment', True), 
                 save=True,
-                device="mps"
+                device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
             )
     
         local_weights = model.state_dict() 

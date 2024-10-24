@@ -60,7 +60,7 @@ def pretrained(client_id, datasets):
         if i==1:
             model_dir = create_model_directory(client_id, i)
             #weights_file = fedclient.train_on_client(models[i], datasets[i], epochs_client, batch_size, client_id, i, lr0, patience)
-            weights_file = fedclient.train_on_client(models[i], datasets[i], client_id=1, model_id=i, training_params=large_company_pretrain_params)
+            weights_file = fedclient.train_on_client(models[i], datasets[i], client_id=1, model_id=1, training_params=large_company_pretrain_params)
             print(f"Pre-training complete for Model {i}. Weights saved at {weights_file}.")
 
 def retrain_and_evaluate(client_id, datasets, iterations):
@@ -90,7 +90,7 @@ def retrain_and_evaluate(client_id, datasets, iterations):
             
             if input(f"Do you want to retrain Model {model_id}? (y/n): ").lower() == 'y':
                 #weights_file = fedclient.train_on_client(models[model_id], datasets[model_id], epochs_client, batch_size, client_id, model_id, lr0, patience)
-                weights_file = fedclient.train_on_client(models[model_id], datasets[model_id], client_id, model_id=i, training_params=large_company_pretrain_params)
+                weights_file = fedclient.train_on_client(models[model_id], datasets[model_id], client_id, model_id=1, training_params=large_company_pretrain_params)
                 print(f"Retraining complete for Model {model_id}. New local weights saved at {weights_file}.")
                 
                 print(f"Evaluating accuracy on the test set for Model {model_id}...")
@@ -129,8 +129,8 @@ def main():
     client_id = int(input("Please enter a client ID: "))
     fedclient = FedClient()
     datasets = [
-        f"/Users/kuangsin/FedAvg/clients/client{client_id}/horizon/data.yaml",
-        f"/Users/kuangsin/FedAvg/clients/client{client_id}/top/data.yaml"
+        f"/mnt/c/Users/oplabciti/Desktop/FedAvg/clients/client{client_id}/horizon/data.yaml",
+        f"/mnt/c/Users/oplabciti/Desktop/FedAvg/clients/client{client_id}/top/data.yaml"
     ]
     
     # Checking if want to pretrain the dataset
