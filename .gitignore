@@ -5,3 +5,4 @@ runs/
 /image_processing/Orchid_label.v3i.yolov8/
 /image_processing/Orchid_label.v4i.yolov8/
 labels.cache
+*.Zone.Identifier
