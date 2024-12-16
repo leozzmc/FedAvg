@@ -43,3 +43,29 @@ I simply use **Robeflow** to label the orchid images
 ![val_batch0_labels](https://hackmd.io/_uploads/r1ymp-HpA.jpg)
 
 
+# Program Flow
+
+```mermaid
+sequenceDiagram
+    participant Client1
+    participant Client2
+    participant Server
+
+    Note over Server: Listen to incoming requests
+    Client1->>Client1: Train local model
+    Client2->>Client2: Train local model
+
+    Client1->>Server: Upload local model weight
+    Client2->>Server: Upload local model weight
+
+    Server->>Server: Aggregate model weights
+
+    Server->>Client1: Notify clients of global weight availability
+    Server->>Client2: Notify clients of global weight availability
+
+    Client1->>Server: Download global weight
+    Client2->>Server: Download global weight
+
+    Note over Client1, Client2: Repeat for multiple iterations
+
+```
