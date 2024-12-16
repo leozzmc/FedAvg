@@ -1,6 +1,6 @@
-train: /mnt/c/Users/oplabciti/Desktop/FedAvg/clients/client2/top/train/images
-val: /mnt/c/Users/oplabciti/Desktop/FedAvg/clients/client2/top/valid/images
-test: /mnt/c/Users/oplabciti/Desktop/FedAvg/clients/client2/top/test/images
+train: /home/kevin/FedAvg/clients/client2/top/train/images
+val: /home/kevin/FedAvg/clients/client2/top/valid/images
+test: /home/kevin/FedAvg/clients/client2/top/test/images
 
 nc: 1
 names: ['leaf']

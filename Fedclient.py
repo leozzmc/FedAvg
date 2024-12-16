@@ -49,7 +49,7 @@ class FedClient:
                 save=True,
                 device=torch.device("cuda" if torch.cuda.is_available() else "cpu")
             )
-        else:
+        elif client_id == 2:
             model.train(
                 data=dataset_path,
                 epochs=training_params['epochs'],

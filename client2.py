@@ -6,19 +6,31 @@ import csv
 import shutil
 from Fedclient import FedClient
 from ultralytics import YOLO
+from Lib.count_number import count_leaf_number
 
 iterations = 10  # Number of federation iterations
 modelcount = 2  # Number of models (you can modify if more than 1 model is used)
 imgsz = 640
+# large_company_pretrain_params = {
+#     'epochs': 3,
+#     'batch': 32,
+#     'lr0': 0.0005,
+#     'patience': 5,
+#     'optimizer': 'SGD',
+#     'weight_decay': 0.001,
+#     'dropout': 0.6,
+#     'augment': True
+# }
+
 large_company_pretrain_params = {
-    'epochs': 3,
-    'batch': 32,
-    'lr0': 0.0005,
-    'patience': 5,
-    'optimizer': 'SGD',
-    'weight_decay': 0.001,
-    'dropout': 0.6,
-    'augment': True
+    'epochs': 5,   # 增加 epochs
+    'batch': 32,   # 保持不變
+    'lr0': 0.0005, # 保持不變
+    'patience': 5, # 保持不變
+    'optimizer': 'SGD', # 保持不變
+    'weight_decay': 0.001, # 保持不變
+    'dropout': 0.6, # 保持不變
+    'augment': True # 保持不變
 }
 global_weights_file = 'downloaded_global_weights.pth'
 accuracy_trend = []  # Store accuracy for each training
@@ -95,6 +107,44 @@ def retrain_and_evaluate(client_id, datasets, iterations):
                 print(f"Evaluating accuracy on the test set for Model {model_id}...")
                 accuracy_data = fedclient.evaluate_model(models[model_id], datasets[model_id], iterations, client_id)
                 accuracies.append(accuracy_data['accuracy'])
+                
+                if model_id == 1:
+                    if input("Do you want to make predictions? (y/n): ").lower() == 'y':
+                        # 進行預測
+                        test_images_dir = f"horizon/test/images/"
+                        actual_numbers = {}
+
+                        # 讀取實際葉片數量
+                        with open('archive/orchid_actual_number.csv', mode='r') as file:
+                            reader = csv.DictReader(file)
+                            for row in reader:
+                                actual_numbers[row['ID']] = int(row['Leave Numbers'])
+
+                        print("Actual numbers:", actual_numbers)  # 檢查實際數量
+
+                        predictions = {}
+                        for image_id in actual_numbers.keys():
+                            image_path = os.path.join(test_images_dir, f"{image_id}*.jpg")  # 假設圖片格式為 .jpg
+                            predicted_count = count_leaf_number(models[model_id], image_path)  # 將模型傳遞給函數
+                            predictions[image_id] = predicted_count
+
+                        print("Predictions:", predictions)  # 檢查預測結果
+
+                        # 計算絕對誤差
+                        absolute_errors = {id: abs(predictions[id] - actual_numbers[id]) for id in predictions}
+                        print("Absolute errors:", absolute_errors)  # 檢查絕對誤差
+
+                        # 計算平均絕對誤差 (MAE)
+                        mae = sum(absolute_errors.values()) / len(absolute_errors) if absolute_errors else 0
+                        print(f"Mean Absolute Error (MAE): {mae}")
+
+                        # 保存結果到 horizon_mae.csv
+                        with open(f'horizon_mae_{client_id}.csv', mode='a', newline='') as file:
+                            writer = csv.writer(file)
+                            if file.tell() == 0:  # 檢查是否為空文件
+                                writer.writerow(['Iteration', 'Mean Absolute Error (MAE)'])
+                            writer.writerow([iterations, mae])  # 寫入當前迭代和 MAE
+
 
     # 將準確率寫入 CSV 文件
     csv_file = f'client_{client_id}_accuracy.csv'
@@ -112,6 +162,7 @@ def retrain_and_evaluate(client_id, datasets, iterations):
 
 def listen_for_global_weights(client_id, model_id):
     """Listener that waits for the server to notify when global weights are ready."""
+
     while True:
         print(f"Client {client_id}: Listening for notification for Model {model_id} global weights...")
         response = requests.get(f'http://localhost:5000/api/check_global_weights_status')
@@ -128,9 +179,10 @@ def main():
     client_id = int(input("Please enter a client ID: "))
     fedclient = FedClient()
     datasets = [
-        f"/mnt/c/Users/oplabciti/Desktop/FedAvg/clients/client{client_id}/horizon/data.yaml",
-        f"/mnt/c/Users/oplabciti/Desktop/FedAvg/clients/client{client_id}/top/data.yaml"
+         f"/home/kevin/FedAvg/clients/client{client_id}/top/data.yaml",
+        f"/home/kevin/FedAvg/clients/client{client_id}/horizon/data.yaml"
     ]
+          
     
     # Checking if want to pretrain the dataset
     if input("Start pre-trained phases? (y/n): ").lower() == 'y': 

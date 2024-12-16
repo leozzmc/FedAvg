@@ -1,6 +1,6 @@
-train: /Users/kuangsin/FedAvg/clients/client1/horizon/train/images
-val: /Users/kuangsin/FedAvg/clients/client1/horizon/valid/images
-test: /Users/kuangsin/FedAvg/clients/client1/horizon/test/images
+train: /home/kevin/FedAvg/clients/client1/horizon/train/images
+val: /home/kevin/FedAvg/clients/client1/horizon/test/images
+# test: /home/kevin/FedAvg/clients/client1/horizon/test/images
 
 nc: 1
 names: ['leaf']
