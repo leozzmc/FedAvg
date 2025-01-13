@@ -14,7 +14,7 @@ iterations = 10  # Number of federation iterations
 modelcount = 2  # Number of models (you can modify if more than 1 model is used)
 imgsz = 640
 large_company_pretrain_params = {
-    'epochs': 20,
+    'epochs': 16,
     'batch':  32,
     'lr0': 0.001,
     'patience': 6,
